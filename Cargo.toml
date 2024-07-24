@@ -1,0 +1,14 @@
+[package]
+name = "autodeploy"
+version = "0.1.0"
+edition = "2021"
+authors = ["Kalyan Mudumby"]
+description = "Configurable custom wrapper over git quick and hassle free deployments"
+repository = ""
+
+[dependencies]
+clap = "4.5.10"
+inquire = "0.7.5"
+serde = { version = "1.0.204", features = ["derive"] }
+text-to-ascii-art = "0.1.10"
+toml = "0.8.15"
