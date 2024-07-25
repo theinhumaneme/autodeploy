@@ -1,12 +1,15 @@
 use inquire::InquireError;
 use inquire::Select;
-use serde::Deserialize;
-use serde::Serialize;
+use objects::structs::Service;
 use std::fs;
 use std::process::exit;
+use std::slice::Iter;
 use text_to_ascii_art::to_art;
 use toml;
 
+mod objects;
+use objects::structs::GlobalConfiguration;
+use objects::structs::ProjectConfiguation;
 // USER FLOW
 // prompt for operation, deploy restart or stop
 // prompt for the appropriate project
@@ -14,24 +17,23 @@ use toml;
 // else use the docker bindings or the os to operate using the files generated
 //
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GlobalConfiguration {
-    print_banner: bool,
-    client: Option<String>,
-    organization: Option<String>,
-    configuration_file: Option<String>,
-}
-fn init() {
+fn init() -> String {
     let global_configuration_file = "global.toml";
-    let conifg = match fs::read_to_string(global_configuration_file) {
-        Ok(c) => c,
+    let global_configuration = match fs::read_to_string(global_configuration_file) {
+        Ok(c) => {
+            // println!("Successfully read global configuration");
+            c
+        }
         Err(_) => {
             eprintln!("Could not read file `{}`", global_configuration_file);
             exit(1);
         }
     };
-    let config: GlobalConfiguration = match toml::from_str(&conifg) {
-        Ok(d) => d,
+    let config: GlobalConfiguration = match toml::from_str(&global_configuration) {
+        Ok(d) => {
+            // println!("Successfully loaded global configuration");
+            d
+        }
         Err(_) => {
             eprintln!("Unable to load data from `{}`", global_configuration_file);
             exit(1);
@@ -57,17 +59,37 @@ fn init() {
         print!("\nClient: {}", config.client.unwrap());
     }
     println!("\n"); // standard gutter
+    return config.configuration_file;
 }
 fn main() {
-    init();
+    let configuration_file = match fs::read_to_string(init()) {
+        Ok(c) => {
+            // println!("Successfully read project configuration file");
+            c
+        }
+        Err(_) => {
+            // eprintln!("Could not read file project configuration file");
+            exit(1);
+        }
+    };
+    let config: ProjectConfiguation = match toml::from_str(&configuration_file) {
+        Ok(d) => d,
+        Err(_) => {
+            eprintln!("Invalid Project Configuration Detected");
+            exit(1);
+        }
+    };
     let operations: Vec<&str> = vec![
         "Deploy Application",
         "Restart Application",
         "Stop Application",
     ];
-    let projects: Vec<&str> = vec![];
     let operation_choice: Result<&str, InquireError> =
         Select::new("What would you like to do?", operations).prompt();
+    let project_iterator: Iter<Service> = config.service.iter();
+    let projects = project_iterator
+        .map(|service| service.name.as_str())
+        .collect();
     match operation_choice {
         Ok(choice) => {
             let projects_choice = Select::new("Choose Project", projects).prompt();
