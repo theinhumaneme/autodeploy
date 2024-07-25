@@ -14,3 +14,7 @@ inquire = "0.7.5"
 serde = { version = "1.0.204", features = ["derive"] }
 text-to-ascii-art = "0.1.10"
 toml = "0.8.15"
+
+[profile.release]
+lto = true
+opt-level = 3
