@@ -1,0 +1,16 @@
+repository_path = "/home/kalyanmudumby/Documents/GitHub/autodeploy/repos"
+
+# --------- EXAMPLE ---------
+[[service]]
+name = "EXAMPLE"
+repository_url = "https://example.com"
+
+[service.container]
+name = "example"
+image = "example"
+restart = "example"
+ports = [["9090", "9090"], ["8080", "8080"]]
+volumes = [["/", "//"], ["/", "//"]]
+
+[service.container.build]
+dockerfile = "Dockerfile"
