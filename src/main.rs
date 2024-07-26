@@ -1,3 +1,4 @@
+use dotenv::dotenv;
 use inquire::InquireError;
 use inquire::Select;
 use objects::structs::Service;
@@ -6,8 +7,10 @@ use std::process::exit;
 use std::slice::Iter;
 use text_to_ascii_art::to_art;
 use toml;
+use utils::git_utils;
 
 mod objects;
+mod utils;
 use objects::structs::GlobalConfiguration;
 use objects::structs::ProjectConfiguation;
 // USER FLOW
@@ -62,6 +65,9 @@ fn init() -> String {
     return config.configuration_file;
 }
 fn main() {
+    dotenv().ok();
+    let git_username = std::env::var("GIT_USERNAME").expect("GIT_USERNAME must be set.");
+    let git_password: String = std::env::var("GIT_PASSWORD").expect("GIT_PASSWORD must be set.");
     let configuration_file = match fs::read_to_string(init()) {
         Ok(c) => {
             // println!("Successfully read project configuration file");
