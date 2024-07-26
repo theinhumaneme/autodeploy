@@ -68,6 +68,7 @@ fn main() {
     dotenv().ok();
     let git_username = std::env::var("GIT_USERNAME").expect("GIT_USERNAME must be set.");
     let git_password: String = std::env::var("GIT_PASSWORD").expect("GIT_PASSWORD must be set.");
+    git_utils::clone_repo(&git_username, &git_password);
     let configuration_file = match fs::read_to_string(init()) {
         Ok(c) => {
             // println!("Successfully read project configuration file");
