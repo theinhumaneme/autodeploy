@@ -19,6 +19,7 @@ pub struct Service {
     pub name: String,
     #[serde(rename = "repository_url")]
     pub repository_url: String,
+    pub slug: String,
     pub container: Container,
 }
 

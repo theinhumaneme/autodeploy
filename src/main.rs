@@ -2,12 +2,15 @@ use dotenv::dotenv;
 use inquire::InquireError;
 use inquire::Select;
 use objects::structs::Service;
+use std::clone;
 use std::fs;
+use std::path::Path;
 use std::process::exit;
 use std::slice::Iter;
 use text_to_ascii_art::to_art;
 use toml;
-use utils::git_utils;
+use utils::git_utils::check_repo;
+use utils::git_utils::clone_repo;
 
 mod objects;
 mod utils;
@@ -68,7 +71,6 @@ fn main() {
     dotenv().ok();
     let git_username = std::env::var("GIT_USERNAME").expect("GIT_USERNAME must be set.");
     let git_password: String = std::env::var("GIT_PASSWORD").expect("GIT_PASSWORD must be set.");
-    git_utils::clone_repo(&git_username, &git_password);
     let configuration_file = match fs::read_to_string(init()) {
         Ok(c) => {
             // println!("Successfully read project configuration file");
@@ -95,6 +97,7 @@ fn main() {
         Select::new("What would you like to do?", operations).prompt();
     let project_iterator: Iter<Service> = config.service.iter();
     let projects = project_iterator
+        .clone()
         .map(|service| service.name.as_str())
         .collect();
     match operation_choice {
@@ -102,7 +105,45 @@ fn main() {
             let projects_choice = Select::new("Choose Project", projects).prompt();
             match projects_choice {
                 Ok(project) => match choice {
-                    "Deploy Application" => (),
+                    "Deploy Application" => {
+                        // First Check if the repo exists?
+                        let service: Option<&Service> =
+                            project_iterator.clone().find(|&s| s.name == project);
+                        // dbg!(service.unwrap());
+                        let repository_path =
+                            config.repository_path.to_owned() + "/" + &service.unwrap().slug;
+                        let repo_url = service.unwrap().repository_url.as_str();
+                        let repo_exists = check_repo(Path::new(repository_path.clone().as_str()));
+                        if !repo_exists {
+                            let clone_allow = Select::new(
+                                "Repository does not seem to exist.\nWould you like to clone it",
+                                vec!["Yes", "No"],
+                            )
+                            .prompt();
+                            match clone_allow {
+                                Ok(clone_allow_option) => {
+                                    if clone_allow_option == "Yes" {
+                                        println!("Cloning in progress");
+                                        clone_repo(
+                                            &git_username,
+                                            &git_password,
+                                            &repo_url,
+                                            &repository_path,
+                                        );
+                                        println!("Cloning repository is complete");
+                                    } else if clone_allow_option == "No" {
+                                        eprintln!(
+                                            "Please clone the repo manually to proceed with deployment."
+                                        );
+                                        exit(0);
+                                    }
+                                }
+                                Err(_) => println!(
+                                    "There was an error, please try again, choose a valid option"
+                                ),
+                            }
+                        }
+                    }
                     "Restart Application" => (),
                     "Stop Application" => (),
                     &_ => {
