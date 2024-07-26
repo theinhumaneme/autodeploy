@@ -2,15 +2,14 @@ use dotenv::dotenv;
 use inquire::InquireError;
 use inquire::Select;
 use objects::structs::Service;
-use std::clone;
 use std::fs;
 use std::path::Path;
 use std::process::exit;
 use std::slice::Iter;
 use text_to_ascii_art::to_art;
 use toml;
-use utils::git_utils::check_repo;
-use utils::git_utils::clone_repo;
+use utils::git_utils::check_repository;
+use utils::git_utils::prompt_clone_repository;
 
 mod objects;
 mod utils;
@@ -113,35 +112,16 @@ fn main() {
                         let repository_path =
                             config.repository_path.to_owned() + "/" + &service.unwrap().slug;
                         let repo_url = service.unwrap().repository_url.as_str();
-                        let repo_exists = check_repo(Path::new(repository_path.clone().as_str()));
+                        let repo_exists =
+                            check_repository(Path::new(repository_path.clone().as_str()));
                         if !repo_exists {
-                            let clone_allow = Select::new(
-                                "Repository does not seem to exist.\nWould you like to clone it",
-                                vec!["Yes", "No"],
+                            prompt_clone_repository(
+                                &git_username,
+                                &git_password,
+                                &repo_url,
+                                &repository_path,
                             )
-                            .prompt();
-                            match clone_allow {
-                                Ok(clone_allow_option) => {
-                                    if clone_allow_option == "Yes" {
-                                        println!("Cloning in progress");
-                                        clone_repo(
-                                            &git_username,
-                                            &git_password,
-                                            &repo_url,
-                                            &repository_path,
-                                        );
-                                        println!("Cloning repository is complete");
-                                    } else if clone_allow_option == "No" {
-                                        eprintln!(
-                                            "Please clone the repo manually to proceed with deployment."
-                                        );
-                                        exit(0);
-                                    }
-                                }
-                                Err(_) => println!(
-                                    "There was an error, please try again, choose a valid option"
-                                ),
-                            }
+                        } else {
                         }
                     }
                     "Restart Application" => (),
