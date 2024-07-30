@@ -8,7 +8,7 @@ use std::process::exit;
 pub fn check_repository(path: &Path) -> bool {
     let repo = Repository::open(path);
     match repo {
-        Ok(repo) => return true,
+        Ok(_repo) => return true,
         Err(_) => return false,
     }
 }
@@ -34,7 +34,7 @@ pub fn prompt_clone_repository(git_username: &str, git_password: &str, repo_url:
                 builder.fetch_options(fo);
                 let clone_status = builder.clone(repo_url, Path::new(path));
                 match clone_status {
-                    Ok(repo) => {
+                    Ok(_repo) => {
                         println!("Cloning repository is complete");
                     }
                     Err(_) => {
