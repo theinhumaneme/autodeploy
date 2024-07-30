@@ -1,5 +1,5 @@
-use git2::BranchType;
-use git2::{Cred, RemoteCallbacks, Repository};
+use git2::build::{self, RepoBuilder};
+use git2::{AutotagOption, BranchType, Cred, FetchOptions, RemoteCallbacks, Repository};
 use inquire::Select;
 use std::path::Path;
 use std::process::exit;
@@ -15,7 +15,12 @@ pub fn check_repository(path: &Path) -> bool {
 ///
 /// handle the user choice and clone the repo as required\
 /// wrappper around the git2 library
-pub fn prompt_clone_repository(git_username: &str, git_password: &str, repo_url: &str, path: &str) {
+pub fn prompt_clone_repository(
+    git_username: &str,
+    git_password: &str,
+    repo_url: &str,
+    repository_path: &str,
+) {
     let clone_allow = Select::new(
         "Repository does not seem to exist.\nWould you like to clone it",
         vec!["Yes", "No"],
@@ -28,11 +33,11 @@ pub fn prompt_clone_repository(git_username: &str, git_password: &str, repo_url:
                 let mut callbacks = RemoteCallbacks::new();
                 callbacks
                     .credentials(|_, _, _| Cred::userpass_plaintext(git_username, git_password));
-                let mut fo = git2::FetchOptions::new();
+                let mut fo = FetchOptions::new();
                 fo.remote_callbacks(callbacks);
-                let mut builder = git2::build::RepoBuilder::new();
+                let mut builder = RepoBuilder::new();
                 builder.fetch_options(fo);
-                let clone_status = builder.clone(repo_url, Path::new(path));
+                let clone_status = builder.clone(repo_url, Path::new(repository_path));
                 match clone_status {
                     Ok(_repo) => {
                         println!("Cloning repository is complete");
@@ -42,12 +47,37 @@ pub fn prompt_clone_repository(git_username: &str, git_password: &str, repo_url:
                     }
                 }
             } else if clone_allow_option == "No" {
-                eprintln!("Please clone the repo manually at {path} to proceed with deployment");
+                eprintln!("Please clone the repo manually at {repository_path} to proceed with deployment");
                 exit(0);
             }
         }
         Err(_) => println!("There was an error, please try again, choose a valid option"),
     }
+}
+
+/// check if the reposity can be pulled from the remote.
+pub fn pull_repository(
+    git_username: &str,
+    git_password: &str,
+    repo_url: &str,
+    repository_path: &str,
+) -> bool {
+    let repo = Repository::open(Path::new(repository_path)).unwrap();
+    let mut remote = repo.find_remote("origin").unwrap();
+    let mut callbacks = RemoteCallbacks::new();
+    callbacks.credentials(|_, _, _| Cred::userpass_plaintext(git_username, git_password));
+    let mut fo = FetchOptions::new();
+    fo.remote_callbacks(callbacks);
+    fo.download_tags(AutotagOption::All); // Fetch all tags
+
+    // Fetch all branches from the remote
+    let fetch_status = remote.fetch(&["refs/heads/*:refs/remotes/origin/*"], Some(&mut fo), None);
+    let pull_status = match fetch_status {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+    println!("All branches have been fetched and updated successfully.");
+    pull_status
 }
 
 /// prompt the user to select a branch.
@@ -97,7 +127,7 @@ pub fn prompt_branch_selection(repository_path: &str) -> Option<String> {
     let selected_branch = match branch_selection {
         Ok(branch) => Some(branch.to_owned()),
         Err(_) => {
-            println!("There was an error, please try again, choose a valid option");
+            println!("There was an error, please try again, choose a valid branch");
             None
         }
     };

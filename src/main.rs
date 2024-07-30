@@ -1,4 +1,5 @@
 use dotenv::dotenv;
+use git2::Branch;
 use inquire::InquireError;
 use inquire::Select;
 use objects::structs::Service;
@@ -11,6 +12,7 @@ use toml;
 use utils::git_utils::check_repository;
 use utils::git_utils::prompt_branch_selection;
 use utils::git_utils::prompt_clone_repository;
+use utils::git_utils::pull_repository;
 
 mod objects;
 mod utils;
@@ -123,8 +125,20 @@ fn main() {
                                 &repository_path,
                             )
                         } else {
-                            let branch = prompt_branch_selection(&repository_path).unwrap();
-                            println!("The selected branch is {branch}");
+                            pull_repository(
+                                &git_username,
+                                &git_password,
+                                &repo_url,
+                                &repository_path,
+                            );
+                            let branch = prompt_branch_selection(&repository_path);
+                            if branch.is_none() {
+                                // the error is handled by interim, we just kick the user outta the flow ->/
+                                // println!("No branch selected please try again");
+                                exit(1)
+                            } else {
+                                println!("Selected branch is {:?}", branch.clone());
+                            };
                         }
                     }
                     "Restart Application" => (),
