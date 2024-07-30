@@ -9,6 +9,7 @@ use std::slice::Iter;
 use text_to_ascii_art::to_art;
 use toml;
 use utils::git_utils::check_repository;
+use utils::git_utils::prompt_branch_selection;
 use utils::git_utils::prompt_clone_repository;
 
 mod objects;
@@ -122,6 +123,8 @@ fn main() {
                                 &repository_path,
                             )
                         } else {
+                            let branch = prompt_branch_selection(&repository_path).unwrap();
+                            println!("The selected branch is {branch}");
                         }
                     }
                     "Restart Application" => (),

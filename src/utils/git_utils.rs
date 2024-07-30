@@ -1,3 +1,4 @@
+use git2::BranchType;
 use git2::{Cred, RemoteCallbacks, Repository};
 use inquire::Select;
 use std::path::Path;
@@ -47,4 +48,58 @@ pub fn prompt_clone_repository(git_username: &str, git_password: &str, repo_url:
         }
         Err(_) => println!("There was an error, please try again, choose a valid option"),
     }
+}
+
+/// prompt the user to select a branch.
+pub fn prompt_branch_selection(repository_path: &str) -> Option<String> {
+    // first fetch the repo and then prompt the branches for selection
+    // repo is assumed to exist on the filesystem
+    let repo = Repository::open(repository_path).unwrap();
+    let branches = repo.branches(Some(BranchType::Remote));
+    let mut branch_list: Vec<String> = vec![];
+    match branches {
+        Ok(branches) => {
+            for branch_result in branches {
+                match branch_result {
+                    Ok((branch, _)) => {
+                        match branch.name() {
+                            Ok(Some(name)) => branch_list.push(name.to_string()),
+                            Ok(None) => {
+                                println!("cannot parse/fetch the branch try again")
+                            }
+                            Err(e) => {
+                                // Handle error from branch.name()
+                                eprintln!("Error getting branch name: {:?}", e);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        // Handle error from branch_result
+                        eprintln!("Error processing branch result: {:?}", e);
+                    }
+                }
+            }
+        }
+        Err(_) => {
+            eprintln!("Cannot fetch branches");
+        }
+    }
+    // remove origin/HEAD from the listed options
+    branch_list = branch_list
+        .into_iter()
+        .filter(|branch| branch != "origin/HEAD")
+        .collect();
+    let filtered_branch_list: Vec<&str> =
+        branch_list.iter().map(|branch| branch.as_str()).collect();
+    // prompt the user to select the branch
+    let branch_selection =
+        Select::new("choose the branch to be deployed", filtered_branch_list).prompt();
+    let selected_branch = match branch_selection {
+        Ok(branch) => Some(branch.to_owned()),
+        Err(_) => {
+            println!("There was an error, please try again, choose a valid option");
+            None
+        }
+    };
+    selected_branch
 }
