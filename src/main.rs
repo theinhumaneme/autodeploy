@@ -1,5 +1,4 @@
 use dotenv::dotenv;
-use git2::Branch;
 use inquire::InquireError;
 use inquire::Select;
 use objects::structs::Service;
