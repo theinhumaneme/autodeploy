@@ -9,6 +9,7 @@ use std::process::exit;
 use std::slice::Iter;
 use text_to_ascii_art::to_art;
 use toml;
+use utils::git_utils::branch_checkout;
 use utils::git_utils::check_repository;
 use utils::git_utils::prompt_branch_selection;
 use utils::git_utils::prompt_clone_repository;
@@ -131,15 +132,16 @@ fn main() {
                                 &repo_url,
                                 &repository_path,
                             );
-                            let branch = prompt_branch_selection(&repository_path);
-                            if branch.is_none() {
-                                // the error is handled by interim, we just kick the user outta the flow ->/
-                                // println!("No branch selected please try again");
-                                exit(1)
-                            } else {
-                                println!("Selected branch is {:?}", branch.clone());
-                            };
                         }
+                        let branch = prompt_branch_selection(&repository_path);
+                        if branch.is_none() {
+                            // the error is handled by interim, we just kick the user outta the flow ->/
+                            // println!("No branch selected please try again");
+                            exit(1)
+                        } else {
+                            println!("Selected branch is {:?}", branch.clone().unwrap());
+                            branch_checkout(&repository_path, branch.unwrap());
+                        };
                     }
                     "Restart Application" => (),
                     "Stop Application" => (),

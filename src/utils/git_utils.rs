@@ -1,4 +1,4 @@
-use git2::build::{self, RepoBuilder};
+use git2::build::{self, CheckoutBuilder, RepoBuilder};
 use git2::{AutotagOption, BranchType, Cred, FetchOptions, RemoteCallbacks, Repository};
 use inquire::Select;
 use std::path::Path;
@@ -132,4 +132,39 @@ pub fn prompt_branch_selection(repository_path: &str) -> Option<String> {
         }
     };
     selected_branch
+}
+
+pub fn branch_checkout(repository_path: &str, branch_selection: String) {
+    let repo = Repository::open(Path::new(repository_path)).unwrap();
+    // let clean_name: Vec<&str> = branch_selection.split("/").collect();
+    // let branch_name = clean_name[1];
+    // Find the branch
+    // let branch = repo
+    //     .find_branch(branch_selection.as_str(), BranchType::Remote)
+    //     .unwrap();
+    // let branch_ref = branch.get();
+    // repo.set_head(branch_ref.name().unwrap()).unwrap();
+    // repo.checkout_head(Some(CheckoutBuilder::new().force()))
+    //     .unwrap();
+
+    // Get the remote branch reference
+    let remote_branch_ref = repo
+        .find_branch(branch_selection.as_str(), BranchType::Remote)
+        .unwrap();
+    let remote_branch_commit = repo
+        .reference_to_annotated_commit(remote_branch_ref.get())
+        .unwrap();
+
+    // Get the actual commit from the annotated commit
+    let commit = repo.find_commit(remote_branch_commit.id()).unwrap();
+
+    // Create a new local branch that tracks the remote branch
+    repo.branch(branch_selection.as_str(), &commit, true)
+        .unwrap();
+
+    // Checkout the new local branch
+    let (object, reference) = repo.revparse_ext(branch_selection.as_str()).unwrap();
+    repo.checkout_tree(&object, Some(&mut CheckoutBuilder::new().force()))
+        .unwrap();
+    repo.set_head(reference.unwrap().name().unwrap()).unwrap();
 }
