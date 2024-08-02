@@ -1,8 +1,11 @@
-repository_path = "/home/kalyanmudumby/Documents/GitHub/autodeploy/repos"
+repository_path = "./repos"
 
 # --------- EXAMPLE ---------
 [[service]]
 name = "EXAMPLE"
+# name of the directory where the repo will be cloned into
+# $(pws)/repos/example
+slug = "example"
 repository_url = "https://example.com"
 
 [service.container]
