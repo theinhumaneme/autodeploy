@@ -9,11 +9,15 @@ slug = "example"
 repository_url = "https://example.com"
 
 [service.container]
-name = "example"
+name = "example"                               # optional
 image = "example"
-restart = "example"
-ports = [["9090", "9090"], ["8080", "8080"]]
-volumes = [["/", "//"], ["/", "//"]]
+restart = "example"                            # optional
+ports = [["9090", "9090"], ["8080", "8080"]]   # optional
+volumes = [["/", "//"], ["/", "//"]]           # optional
+environment = [["KEY", "VAL"], ["KEY", "VAL"]] # optional
+std_in = false                                 # optional
+tty = false                                    # optional
+user = "1000:1000"                             # optional
 
-[service.container.build]
+[service.container.build] # optional
 dockerfile = "Dockerfile"
