@@ -1,4 +1,4 @@
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use inquire::InquireError;
 use inquire::Select;
 use objects::structs::Service;
