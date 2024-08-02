@@ -51,7 +51,7 @@ fn init() -> String {
     if print_banner {
         match to_art("AUTO DEPLOY".to_string(), "default", 0, 0, 0) {
             Ok(string) => println!(
-                "{}\n\nConfigurable custom wrapper over for quick and hassle free deployments",
+                "{}\n\nConfigurable custom wrapper over git for quick and hassle free deployments",
                 string
             ),
             Err(err) => println!("Error: {}", err),
