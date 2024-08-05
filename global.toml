@@ -1,4 +1,4 @@
-print_banner = true                # Enable/Disable banner at start
+banner = true                      # Enable/Disable banner at start
 client = "Earth"                   # Optional
 organization = "Avengers"          # Optional
 configuration_file = "config.toml" # `config.toml` Default File
