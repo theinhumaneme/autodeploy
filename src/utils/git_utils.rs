@@ -56,12 +56,7 @@ pub fn prompt_clone_repository(
 }
 
 /// check if the reposity can be pulled from the remote.
-pub fn pull_repository(
-    git_username: &str,
-    git_password: &str,
-    repo_url: &str,
-    repository_path: &str,
-) -> bool {
+pub fn pull_repository(git_username: &str, git_password: &str, repository_path: &str) -> bool {
     let repo = Repository::open(Path::new(repository_path)).unwrap();
     let mut remote = repo.find_remote("origin").unwrap();
     let mut callbacks = RemoteCallbacks::new();
@@ -146,9 +141,14 @@ pub fn branch_checkout(repository_path: &str, branch_selection: String) {
     // Get the actual commit from the annotated commit
     let commit = repo.find_commit(remote_branch_commit.id()).unwrap();
 
-    // Create a new local branch that tracks the remote branch
-    repo.branch(branch_selection.as_str(), &commit, true)
-        .unwrap();
+    if let Ok(local_branch) = repo.find_branch(branch_selection.as_str(), BranchType::Local) {
+        // Optionally, you could choose to checkout this branch if needed:
+        repo.set_head(local_branch.get().name().unwrap()).unwrap();
+    } else {
+        // Create a new local branch that tracks the remote branch
+        repo.branch(branch_selection.as_str(), &commit, true)
+            .unwrap();
+    }
 
     // Checkout the new local branch
     let (object, reference) = repo.revparse_ext(branch_selection.as_str()).unwrap();
