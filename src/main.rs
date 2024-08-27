@@ -1,13 +1,20 @@
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use inquire::InquireError;
 use inquire::Select;
-use objects::structs::Service;
+use objects::structs::Application;
+use objects::structs::ComposeConfiguation;
+use objects::structs::Container;
 use std::fs;
 use std::path::Path;
 use std::process::exit;
 use std::slice::Iter;
 use text_to_ascii_art::to_art;
 use toml;
+use utils::docker_utils::build_compose;
+use utils::docker_utils::generate_compose;
+use utils::docker_utils::restart_compose;
+use utils::docker_utils::start_compose;
+use utils::docker_utils::stop_compose;
 use utils::git_utils::branch_checkout;
 use utils::git_utils::check_repository;
 use utils::git_utils::prompt_branch_selection;
@@ -97,7 +104,7 @@ fn main() {
     ];
     let operation_choice: Result<&str, InquireError> =
         Select::new("What would you like to do?", operations).prompt();
-    let project_iterator: Iter<Service> = config.service.iter();
+    let project_iterator: Iter<Application> = config.application.iter();
     let projects = project_iterator
         .clone()
         .map(|service| service.name.as_str())
@@ -109,7 +116,7 @@ fn main() {
                 Ok(project) => match choice {
                     "Deploy Application" => {
                         // First Check if the repo exists?
-                        let service: Option<&Service> =
+                        let service: Option<&Application> =
                             project_iterator.clone().find(|&s| s.name == project);
                         // dbg!(service.unwrap());
                         let repository_path =
@@ -125,12 +132,7 @@ fn main() {
                                 &repository_path,
                             )
                         } else {
-                            pull_repository(
-                                &git_username,
-                                &git_password,
-                                &repo_url,
-                                &repository_path,
-                            );
+                            pull_repository(&git_username, &git_password, &repository_path);
                         }
                         let branch = prompt_branch_selection(&repository_path);
                         if branch.is_none() {
@@ -141,9 +143,31 @@ fn main() {
                             println!("Selected branch is {:?}", branch.clone().unwrap());
                             branch_checkout(&repository_path, branch.unwrap());
                         };
+                        let compose_path = generate_compose(
+                            config.repository_path,
+                            "./compose_files".to_string(),
+                            service.unwrap().clone().slug,
+                            service.unwrap().to_owned().container.clone(),
+                        );
+                        build_compose(compose_path.clone());
+                        start_compose(compose_path.clone());
                     }
-                    "Restart Application" => (),
-                    "Stop Application" => (),
+                    "Restart Application" => {
+                        let service: Option<&Application> =
+                            project_iterator.clone().find(|&s| s.name == project);
+                        restart_compose(format!(
+                            "./compose_files/{}.yaml",
+                            service.unwrap().clone().slug
+                        ))
+                    }
+                    "Stop Application" => {
+                        let service: Option<&Application> =
+                            project_iterator.clone().find(|&s| s.name == project);
+                        stop_compose(format!(
+                            "./compose_files/{}.yaml",
+                            service.unwrap().clone().slug
+                        ))
+                    }
                     &_ => {
                         println!("Invalid Flow, please restart the process");
                         exit(1);

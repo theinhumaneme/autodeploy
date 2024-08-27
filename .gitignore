@@ -15,4 +15,5 @@ target/
 
 *.env
 kalyan.toml
-/repos/**
+/repos/
+/compose_files/

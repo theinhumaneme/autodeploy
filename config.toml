@@ -1,19 +1,23 @@
-repository_path = "./repos"
+path = "./repos"
 
 # --------- EXAMPLE ---------
-[[service]]
-name = "EXAMPLE"
+[[application]]
+application_name = "EXAMPLE"
 # name of the directory where the repo will be cloned into
 # $(pws)/repos/example
-slug = "example"
-repository_url = "https://example.com"
+directory_name = "example"
+url = "https://example.com"
 
-[service.container]
+[application.container]
 name = "example"
 image = "example"
-restart = "example"
-ports = [["9090", "9090"], ["8080", "8080"]]
-volumes = [["/", "//"], ["/", "//"]]
+restart_policy = "example"
+ports = ["8080:8080"]
+volumes = ["xyz:zyx"]              # For host path use absolute paths
+environment = ["KEY", "VAL"]       # optional
+standard_in = false                # optional
+interactive = false                # optional
+docker_user_group_id = "1000:1000" # optional
 
-[service.container.build]
+[application.container.build]
 dockerfile = "Dockerfile"
