@@ -9,7 +9,7 @@ Deploying applications locally before moving to cloud environments ensures smoot
 
 # Usage
 
-## Authenication Files
+## Authentication Files
 
 You have to configure a `.env` file with the following variables
 
