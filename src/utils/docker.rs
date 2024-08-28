@@ -71,9 +71,17 @@ pub fn build_compose(compose_file_path: String) {
     }
 }
 
-pub fn start_compose(compose_file_path: String) {
+pub fn start_compose(compose_file_path: String, project: String) {
     let command = "docker";
-    let args = ["compose", "-f", compose_file_path.as_str(), "up", "-d"];
+    let args = [
+        "compose",
+        "-f",
+        compose_file_path.as_str(),
+        "-p",
+        project.as_str(),
+        "up",
+        "-d",
+    ];
     if check_file(compose_file_path.clone()) {
         execute_command(command, args.to_vec());
         println!("Application Started");
@@ -81,9 +89,16 @@ pub fn start_compose(compose_file_path: String) {
         println!("Failed to start application");
     }
 }
-pub fn stop_compose(compose_file_path: String) {
+pub fn stop_compose(compose_file_path: String, project: String) {
     let command = "docker";
-    let args = ["compose", "-f", compose_file_path.as_str(), "down"];
+    let args = [
+        "compose",
+        "-f",
+        compose_file_path.as_str(),
+        "-p",
+        project.as_str(),
+        "down",
+    ];
     if check_file(compose_file_path.clone()) {
         execute_command(command, args.to_vec());
         println!("Application Stopped");
@@ -91,7 +106,7 @@ pub fn stop_compose(compose_file_path: String) {
         println!("Failed to stop the application");
     }
 }
-pub fn restart_compose(compose_file_path: String) {
-    stop_compose(compose_file_path.clone());
-    start_compose(compose_file_path.clone());
+pub fn restart_compose(compose_file_path: String, project: String) {
+    stop_compose(compose_file_path.clone(), project.clone());
+    start_compose(compose_file_path.clone(), project.clone());
 }

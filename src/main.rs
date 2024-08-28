@@ -146,23 +146,23 @@ fn main() {
                             service.unwrap().to_owned().container.clone(),
                         );
                         build_compose(compose_path.clone());
-                        start_compose(compose_path.clone());
+                        start_compose(compose_path.clone(), service.unwrap().clone().slug);
                     }
                     "Restart Application" => {
                         let service: Option<&Application> =
                             project_iterator.clone().find(|&s| s.name == project);
-                        restart_compose(format!(
-                            "./compose_files/{}.yaml",
-                            service.unwrap().clone().slug
-                        ))
+                        restart_compose(
+                            format!("./compose_files/{}.yaml", service.unwrap().clone().slug),
+                            service.unwrap().clone().slug,
+                        )
                     }
                     "Stop Application" => {
                         let service: Option<&Application> =
                             project_iterator.clone().find(|&s| s.name == project);
-                        stop_compose(format!(
-                            "./compose_files/{}.yaml",
-                            service.unwrap().clone().slug
-                        ))
+                        stop_compose(
+                            format!("./compose_files/{}.yaml", service.unwrap().clone().slug),
+                            service.unwrap().clone().slug,
+                        )
                     }
                     &_ => {
                         println!("Invalid Flow, please restart the process");
