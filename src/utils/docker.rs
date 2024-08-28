@@ -1,3 +1,4 @@
+use crate::check_file;
 use crate::{ComposeConfiguation, Container};
 use std::collections::HashMap;
 use std::fs::create_dir_all;
@@ -14,7 +15,6 @@ pub fn generate_compose(
     slug: String,
     container_config: Container,
 ) -> String {
-    println!("Generating Compose");
     let mut services: HashMap<String, Container> = HashMap::new();
     let build_context = format!(".{}/{}", repo_directory, slug).to_owned();
     let mut container: Container = container_config.clone();
@@ -25,7 +25,7 @@ pub fn generate_compose(
     if !Path::new(&compose_directory).exists() {
         // Create the folder if it doesn't exist
         create_dir_all(format!("./{}", compose_directory.clone())).unwrap();
-        println!("Directory created: {}", compose_directory);
+        println!("Directory created:{}", compose_directory);
     } else {
         println!("Directory already exists: {}", compose_directory);
     }
@@ -37,11 +37,7 @@ pub fn generate_compose(
     println!("Generating Compose Complete");
     base_path
 }
-
-pub fn build_compose(compose_file_path: String) {
-    let command = "docker";
-    let args = ["compose", "-f", compose_file_path.as_str(), "build"];
-    println!("Building Application Started");
+pub fn execute_command(command: &str, args: Vec<&str>) {
     let mut child = Command::new(command)
         .args(&args)
         .stdin(Stdio::null()) // No input needed
@@ -62,60 +58,38 @@ pub fn build_compose(compose_file_path: String) {
             eprintln!("DEBUG: {}", line.unwrap());
         }
     }
-    println!("Building Application Complete");
+}
+
+pub fn build_compose(compose_file_path: String) {
+    let command = "docker";
+    let args = ["compose", "-f", compose_file_path.as_str(), "build"];
+    if check_file(compose_file_path.clone()) {
+        execute_command(command, args.to_vec());
+        println!("Building Application Complete");
+    } else {
+        println!("Building Application Failed");
+    }
 }
 
 pub fn start_compose(compose_file_path: String) {
     let command = "docker";
     let args = ["compose", "-f", compose_file_path.as_str(), "up", "-d"];
-    println!("Trying to start application");
-    let mut child = Command::new(command)
-        .args(&args)
-        .stdin(Stdio::null()) // No input needed
-        .stdout(Stdio::piped()) // Capture output
-        .stderr(Stdio::piped()) // Capture error output
-        .spawn()
-        .unwrap();
-    if let Some(stdout) = child.stdout.as_mut() {
-        let output = io::BufReader::new(stdout).lines();
-        for line in output {
-            println!("{}", line.unwrap());
-        }
+    if check_file(compose_file_path.clone()) {
+        execute_command(command, args.to_vec());
+        println!("Application Started");
+    } else {
+        println!("Failed to start application");
     }
-    // Read and print the standard error output
-    if let Some(stderr) = child.stderr.as_mut() {
-        let error_output = io::BufReader::new(stderr).lines();
-        for line in error_output {
-            eprintln!("DEBUG: {}", line.unwrap());
-        }
-    }
-    println!("Application Started");
 }
 pub fn stop_compose(compose_file_path: String) {
     let command = "docker";
     let args = ["compose", "-f", compose_file_path.as_str(), "down"];
-    println!("Trying to stop application");
-    let mut child = Command::new(command)
-        .args(&args)
-        .stdin(Stdio::null()) // No input needed
-        .stdout(Stdio::piped()) // Capture output
-        .stderr(Stdio::piped()) // Capture error output
-        .spawn()
-        .unwrap();
-    if let Some(stdout) = child.stdout.as_mut() {
-        let output = io::BufReader::new(stdout).lines();
-        for line in output {
-            println!("{}", line.unwrap());
-        }
+    if check_file(compose_file_path.clone()) {
+        execute_command(command, args.to_vec());
+        println!("Application Stopped");
+    } else {
+        println!("Failed to stop the application");
     }
-    // Read and print the standard error output
-    if let Some(stderr) = child.stderr.as_mut() {
-        let error_output = io::BufReader::new(stderr).lines();
-        for line in error_output {
-            eprintln!("DEBUG: {}", line.unwrap());
-        }
-    }
-    println!("Application Stopped");
 }
 pub fn restart_compose(compose_file_path: String) {
     stop_compose(compose_file_path.clone());

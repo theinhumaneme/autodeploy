@@ -10,16 +10,17 @@ use std::process::exit;
 use std::slice::Iter;
 use text_to_ascii_art::to_art;
 use toml;
-use utils::docker_utils::build_compose;
-use utils::docker_utils::generate_compose;
-use utils::docker_utils::restart_compose;
-use utils::docker_utils::start_compose;
-use utils::docker_utils::stop_compose;
-use utils::git_utils::branch_checkout;
-use utils::git_utils::check_repository;
-use utils::git_utils::prompt_branch_selection;
-use utils::git_utils::prompt_clone_repository;
-use utils::git_utils::pull_repository;
+use utils::docker::build_compose;
+use utils::docker::generate_compose;
+use utils::docker::restart_compose;
+use utils::docker::start_compose;
+use utils::docker::stop_compose;
+use utils::file::check_file;
+use utils::git::branch_checkout;
+use utils::git::check_repository;
+use utils::git::prompt_branch_selection;
+use utils::git::prompt_clone_repository;
+use utils::git::pull_repository;
 
 mod objects;
 mod utils;
@@ -80,16 +81,11 @@ fn main() {
     dotenv().ok();
     let git_username = std::env::var("GIT_USERNAME").expect("GIT_USERNAME must be set.");
     let git_password: String = std::env::var("GIT_PASSWORD").expect("GIT_PASSWORD must be set.");
-    let configuration_file = match fs::read_to_string(init()) {
-        Ok(c) => {
-            // println!("Successfully read project configuration file");
-            c
-        }
-        Err(_) => {
-            // eprintln!("Could not read file project configuration file");
-            exit(1);
-        }
-    };
+    if !check_file(init()) {
+        eprintln!("Could not read project configuration file");
+        exit(1);
+    }
+    let configuration_file = fs::read_to_string(init()).unwrap();
     let config: ProjectConfiguation = match toml::from_str(&configuration_file) {
         Ok(d) => d,
         Err(_) => {
