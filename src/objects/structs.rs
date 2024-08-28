@@ -20,7 +20,6 @@ pub struct ProjectConfiguation {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Application {
-    #[serde(rename(deserialize = "application_name"))]
     pub name: String,
     #[serde(rename(deserialize = "url"))]
     pub repository_url: String,
@@ -37,14 +36,24 @@ pub struct Container {
     pub build: Build,
     #[serde(rename(deserialize = "restart_policy"))]
     pub restart: String,
-    #[serde(rename(deserialize = "docker_user_group_id"))]
+    #[serde(
+        rename(deserialize = "docker_user_group_id"),
+        skip_serializing_if = "Option::is_none"
+    )]
     pub user: Option<String>,
-    #[serde(rename(deserialize = "standard_in"))]
+    #[serde(
+        rename(deserialize = "standard_in"),
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stdin_open: Option<bool>,
-    #[serde(rename(deserialize = "interactive"))]
+    #[serde(
+        rename(deserialize = "interactive"),
+        skip_serializing_if = "Option::is_none"
+    )]
     pub tty: Option<bool>,
     pub ports: Vec<String>,
-    pub volumes: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub volumes: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub environment: Option<Vec<String>>,
 }

@@ -6,7 +6,7 @@ path = "./repos"
 
 # --------- EXAMPLE ---------
 [[application]]
-application_name = "EXAMPLE"
+name = "EXAMPLE"
 # name of the directory where the repo will be cloned into
 # $(pws)/repos/example
 directory_name = "example"
@@ -17,11 +17,14 @@ name = "example"
 image = "example"
 restart_policy = "example"
 ports = ["8080:8080", "9090:9090"]
-volumes = ["xyz:zyx", "abc:cba"]     # For host path mapping use absolute paths
+volumes = [
+    "xyz:zyx",
+    "abc:cba",
+] # optional For host path mapping use absolute paths
 environment = ["KEY=VAL", "KEY=VAL"] # optional
-standard_in = false                  # optional
-interactive = false                  # optional
-docker_user_group_id = "1000:1000"   # optional
+standard_in = false # optional
+interactive = false # optional
+docker_user_group_id = "1000:1000" # optional
 
 [application.container.build]
 dockerfile = "Dockerfile"
