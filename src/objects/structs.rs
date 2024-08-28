@@ -53,6 +53,11 @@ pub struct Container {
 pub struct Build {
     #[serde(skip_deserializing)]
     pub context: String,
+    #[serde(
+        rename(deserialize = "build_args"),
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub args: Option<Vec<String>>,
     pub dockerfile: String,
 }
 
