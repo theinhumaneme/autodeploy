@@ -1,18 +1,19 @@
-use git2::build::{CheckoutBuilder, RepoBuilder};
-use git2::{AutotagOption, BranchType, Cred, FetchOptions, RemoteCallbacks, Repository};
+use std::{path::Path, process::exit};
+
+use git2::{
+    build::{CheckoutBuilder, RepoBuilder},
+    AutotagOption, BranchType, Cred, FetchOptions, RemoteCallbacks, Repository,
+};
 use inquire::Select;
-use std::path::Path;
-use std::process::exit;
 
 /// Check if the repository exists on the local filesystem
 pub fn check_repository(path: &Path) -> bool {
     let repo = Repository::open(path);
     match repo {
-        Ok(_repo) => return true,
-        Err(_) => return false,
+        Ok(_repo) => true,
+        Err(_) => false,
     }
 }
-///
 /// handle the user choice and clone the repo as required\
 /// wrappper around the git2 library
 pub fn prompt_clone_repository(
@@ -67,10 +68,7 @@ pub fn pull_repository(git_username: &str, git_password: &str, repository_path: 
 
     // Fetch all branches from the remote
     let fetch_status = remote.fetch(&["refs/heads/*:refs/remotes/origin/*"], Some(&mut fo), None);
-    let pull_status = match fetch_status {
-        Ok(_) => true,
-        Err(_) => false,
-    };
+    let pull_status = fetch_status.is_ok();
     println!("All branches have been fetched and updated successfully.");
     pull_status
 }
@@ -110,23 +108,20 @@ pub fn prompt_branch_selection(repository_path: &str) -> Option<String> {
         }
     }
     // remove origin/HEAD from the listed options
-    branch_list = branch_list
-        .into_iter()
-        .filter(|branch| branch != "origin/HEAD")
-        .collect();
+    branch_list.retain(|branch| branch != "origin/HEAD");
     let filtered_branch_list: Vec<&str> =
         branch_list.iter().map(|branch| branch.as_str()).collect();
     // prompt the user to select the branch
     let branch_selection =
         Select::new("choose the branch to be deployed", filtered_branch_list).prompt();
-    let selected_branch = match branch_selection {
+
+    match branch_selection {
         Ok(branch) => Some(branch.to_owned()),
         Err(_) => {
             println!("There was an error, please try again, choose a valid branch");
             None
         }
-    };
-    selected_branch
+    }
 }
 
 pub fn branch_checkout(repository_path: &str, branch_selection: String) {

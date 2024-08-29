@@ -1,13 +1,13 @@
-use crate::check_file;
-use crate::{ComposeConfiguation, Container};
-use std::collections::HashMap;
-use std::fs::create_dir_all;
-use std::fs::File;
-use std::io;
-use std::io::BufRead;
-use std::io::Write;
-use std::path::Path;
-use std::process::{Command, Stdio};
+use std::{
+    collections::HashMap,
+    fs::{create_dir_all, File},
+    io,
+    io::{BufRead, Write},
+    path::Path,
+    process::{Command, Stdio},
+};
+
+use crate::{check_file, ComposeConfiguation, Container};
 
 pub fn generate_compose(
     repo_directory: String,

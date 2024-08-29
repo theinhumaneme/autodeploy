@@ -1,31 +1,21 @@
+use std::{fs, path::Path, process::exit, slice::Iter};
+
 use dotenvy::dotenv;
-use inquire::InquireError;
-use inquire::Select;
-use objects::structs::Application;
-use objects::structs::ComposeConfiguation;
-use objects::structs::Container;
-use std::fs;
-use std::path::Path;
-use std::process::exit;
-use std::slice::Iter;
+use inquire::{InquireError, Select};
+use objects::structs::{Application, ComposeConfiguation, Container};
 use text_to_ascii_art::to_art;
-use toml;
-use utils::docker::build_compose;
-use utils::docker::generate_compose;
-use utils::docker::restart_compose;
-use utils::docker::start_compose;
-use utils::docker::stop_compose;
-use utils::file::check_file;
-use utils::git::branch_checkout;
-use utils::git::check_repository;
-use utils::git::prompt_branch_selection;
-use utils::git::prompt_clone_repository;
-use utils::git::pull_repository;
+use utils::{
+    docker::{build_compose, generate_compose, restart_compose, start_compose, stop_compose},
+    file::check_file,
+    git::{
+        branch_checkout, check_repository, prompt_branch_selection, prompt_clone_repository,
+        pull_repository,
+    },
+};
 
 mod objects;
 mod utils;
-use objects::structs::GlobalConfiguration;
-use objects::structs::ProjectConfiguation;
+use objects::structs::{GlobalConfiguration, ProjectConfiguation};
 // USER FLOW
 // prompt for operation, deploy restart or stop
 // prompt for the appropriate project
@@ -75,7 +65,7 @@ fn init() -> String {
         print!("\nClient: {}", config.client.unwrap());
     }
     println!("\n"); // standard gutter
-    return config.configuration_file;
+    config.configuration_file
 }
 fn main() {
     dotenv().ok();
@@ -124,7 +114,7 @@ fn main() {
                             prompt_clone_repository(
                                 &git_username,
                                 &git_password,
-                                &repo_url,
+                                repo_url,
                                 &repository_path,
                             )
                         } else {
@@ -132,11 +122,10 @@ fn main() {
                         }
                         let branch = prompt_branch_selection(&repository_path);
                         if branch.is_none() {
-                            // the error is handled by interim, we just kick the user outta the flow ->/
-                            // println!("No branch selected please try again");
+                            // the error is handled by interim, we just kick the user outta the flow
                             exit(1)
                         } else {
-                            println!("Selected branch is {:?}", branch.clone().unwrap());
+                            println!("Selected branch is {:?}", branch.clone());
                             branch_checkout(&repository_path, branch.unwrap());
                         };
                         let compose_path = generate_compose(
