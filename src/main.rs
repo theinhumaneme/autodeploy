@@ -121,12 +121,12 @@ fn main() {
                             pull_repository(&git_username, &git_password, &repository_path);
                         }
                         let branch = prompt_branch_selection(&repository_path);
-                        if branch.is_none() {
+                        if let Some(value) = branch {
+                            println!("Selected branch is {:?}", value);
+                            branch_checkout(&repository_path, value);
+                        } else {
                             // the error is handled by interim, we just kick the user outta the flow
                             exit(1)
-                        } else {
-                            println!("Selected branch is {:?}", branch.clone());
-                            branch_checkout(&repository_path, branch.unwrap());
                         };
                         let compose_path = generate_compose(
                             config.repository_path,
