@@ -23,7 +23,7 @@ use objects::structs::{GlobalConfiguration, ProjectConfiguation};
 // else use the docker bindings or the os to operate using the files generated
 //
 
-fn init() -> String {
+fn init() -> GlobalConfiguration {
     let global_configuration_file = "global.toml";
     let global_configuration = match fs::read_to_string(global_configuration_file) {
         Ok(c) => {
@@ -45,6 +45,9 @@ fn init() -> String {
             exit(1);
         }
     };
+    config
+}
+fn banner(config: GlobalConfiguration) {
     let print_banner: bool = config.print_banner;
     if print_banner {
         match to_art("AUTO DEPLOY".to_string(), "default", 0, 0, 0) {
@@ -64,18 +67,18 @@ fn init() -> String {
     if config.client.is_some() {
         print!("\nClient: {}", config.client.unwrap());
     }
-    println!("\n"); // standard gutter
-    config.configuration_file
+    println!("\n");
 }
 fn main() {
     dotenv().ok();
     let git_username = std::env::var("GIT_USERNAME").expect("GIT_USERNAME must be set.");
     let git_password: String = std::env::var("GIT_PASSWORD").expect("GIT_PASSWORD must be set.");
-    if !check_file(init()) {
+    if !check_file(init().configuration_file) {
         eprintln!("Could not read project configuration file");
         exit(1);
     }
-    let configuration_file = fs::read_to_string(init()).unwrap();
+    banner(init());
+    let configuration_file = fs::read_to_string(init().configuration_file).unwrap();
     let config: ProjectConfiguation = match toml::from_str(&configuration_file) {
         Ok(d) => d,
         Err(_) => {
