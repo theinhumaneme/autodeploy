@@ -1,6 +1,6 @@
 [package]
 name = "autodeploy"
-version = "1.0.0"
+version = "1.2.0"
 edition = "2021"
 authors = ["Kalyan Mudumby"]
 description = "Configurable custom wrapper over git for quick and hassle free deployments"

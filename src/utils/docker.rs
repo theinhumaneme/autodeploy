@@ -65,9 +65,6 @@ pub fn build_compose(compose_file_path: String) {
     let args = ["compose", "-f", compose_file_path.as_str(), "build"];
     if check_file(compose_file_path.clone()) {
         execute_command(command, args.to_vec());
-        println!("Building Application Complete");
-    } else {
-        println!("Building Application Failed");
     }
 }
 
@@ -84,9 +81,6 @@ pub fn start_compose(compose_file_path: String, project: String) {
     ];
     if check_file(compose_file_path.clone()) {
         execute_command(command, args.to_vec());
-        println!("Application Started");
-    } else {
-        println!("Failed to start application");
     }
 }
 pub fn stop_compose(compose_file_path: String, project: String) {
@@ -101,9 +95,6 @@ pub fn stop_compose(compose_file_path: String, project: String) {
     ];
     if check_file(compose_file_path.clone()) {
         execute_command(command, args.to_vec());
-        println!("Application Stopped");
-    } else {
-        println!("Failed to stop the application");
     }
 }
 pub fn restart_compose(compose_file_path: String, project: String) {

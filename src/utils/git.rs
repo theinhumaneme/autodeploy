@@ -15,7 +15,7 @@ pub fn check_repository(path: &Path) -> bool {
     }
 }
 /// handle the user choice and clone the repo as required\
-/// wrappper around the git2 library
+/// wrapper around the git2 library
 pub fn prompt_clone_repository(
     git_username: &str,
     git_password: &str,
@@ -68,9 +68,48 @@ pub fn pull_repository(git_username: &str, git_password: &str, repository_path: 
 
     // Fetch all branches from the remote
     let fetch_status = remote.fetch(&["refs/heads/*:refs/remotes/origin/*"], Some(&mut fo), None);
-    let pull_status = fetch_status.is_ok();
-    println!("All branches have been fetched and updated successfully.");
-    pull_status
+    if fetch_status.is_err() {
+        println!("Failed to fetch from remote: {:?}", fetch_status.err());
+        return false;
+    }
+    let branches = repo.branches(Some(BranchType::Local)).unwrap();
+
+    for branch_result in branches {
+        let (branch, branch_type) = branch_result.unwrap();
+        if branch_type == BranchType::Local {
+            let branch_name = branch.name().unwrap().unwrap_or("<unknown>");
+
+            // Find the corresponding remote-tracking branch
+            let upstream_name = format!("refs/remotes/{}", branch_name);
+            if let Ok(upstream) = repo.find_reference(&upstream_name) {
+                let upstream_commit = upstream.peel_to_commit().unwrap();
+                let local_commit = branch.get().peel_to_commit().unwrap();
+
+                // Check if the local branch is behind the remote
+                if local_commit.id() != upstream_commit.id()
+                    && repo
+                        .graph_descendant_of(upstream_commit.id(), local_commit.id())
+                        .unwrap()
+                {
+                    println!("Fast-forwarding branch: {}", branch_name);
+
+                    // Fast-forward the branch
+                    let mut branch_ref = branch.into_reference();
+                    branch_ref
+                        .set_target(upstream_commit.id(), "Fast-forwarding")
+                        .unwrap();
+                } else {
+                    println!(
+                        "Branch '{}' is up-to-date or cannot be fast-forwarded.",
+                        branch_name
+                    );
+                }
+            } else {
+                println!("No upstream branch found for '{}'", branch_name);
+            }
+        }
+    }
+    true
 }
 
 /// prompt the user to select a branch.
@@ -137,12 +176,14 @@ pub fn branch_checkout(repository_path: &str, branch_selection: String) {
     let commit = repo.find_commit(remote_branch_commit.id()).unwrap();
 
     if let Ok(local_branch) = repo.find_branch(branch_selection.as_str(), BranchType::Local) {
-        // Optionally, you could choose to checkout this branch if needed:
+        // Checkout the existing local branch
         repo.set_head(local_branch.get().name().unwrap()).unwrap();
     } else {
         // Create a new local branch that tracks the remote branch
-        repo.branch(branch_selection.as_str(), &commit, true)
+        let local_branch = repo
+            .branch(branch_selection.as_str(), &commit, false)
             .unwrap();
+        repo.set_head(local_branch.get().name().unwrap()).unwrap();
     }
 
     // Checkout the new local branch

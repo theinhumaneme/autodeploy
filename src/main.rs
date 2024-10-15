@@ -120,8 +120,11 @@ fn main() {
                                 repo_url,
                                 &repository_path,
                             )
+                        } else if pull_repository(&git_username, &git_password, &repository_path) {
+                            println!("All branches have been fetched and updated successfully.");
                         } else {
-                            pull_repository(&git_username, &git_password, &repository_path);
+                            println!("Pulling the repository failed");
+                            panic!();
                         }
                         let branch = prompt_branch_selection(&repository_path);
                         if let Some(value) = branch {
