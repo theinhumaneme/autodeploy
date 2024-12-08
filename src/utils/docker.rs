@@ -10,13 +10,13 @@ use std::{
 use crate::{check_file, ComposeConfiguation, Container};
 
 pub fn generate_compose(
-    repo_directory: String,
-    compose_directory: String,
-    slug: String,
-    container_config: Container,
+    repo_directory: &str,
+    compose_directory: &str,
+    slug: &str,
+    container_config: &Container,
 ) -> String {
     let mut services: HashMap<String, Container> = HashMap::new();
-    let build_context = format!(".{}/{}", repo_directory, slug).to_owned();
+    let build_context: String = format!(".{}/{}", repo_directory, slug).to_owned();
     let mut container: Container = container_config.clone();
     container.build.context = build_context;
     services.insert("app".to_string(), container);
@@ -24,15 +24,13 @@ pub fn generate_compose(
     let yaml = serde_yaml::to_string(&compose).unwrap();
     if !Path::new(&compose_directory).exists() {
         // Create the folder if it doesn't exist
-        create_dir_all(format!("./{}", compose_directory.clone())).unwrap();
+        create_dir_all(format!("./{}", compose_directory)).unwrap();
         println!("Directory created:{}", compose_directory);
     } else {
         println!("Directory already exists: {}", compose_directory);
     }
-    let base_path = format!("{}/{}.yaml", compose_directory, slug)
-        .to_string()
-        .to_owned();
-    let mut file = File::create(base_path.clone()).unwrap();
+    let base_path = format!("{}/{}.yaml", compose_directory, slug).to_string();
+    let mut file = File::create(&base_path).unwrap();
     file.write_all(yaml.as_bytes()).unwrap();
     println!("Generating Compose Complete");
     base_path
@@ -60,44 +58,37 @@ pub fn execute_command(command: &str, args: Vec<&str>) {
     }
 }
 
-pub fn build_compose(compose_file_path: String) {
+pub fn build_compose(compose_file_path: &str) {
     let command = "docker";
-    let args = ["compose", "-f", compose_file_path.as_str(), "build"];
-    if check_file(compose_file_path.clone()) {
+    let args = ["compose", "-f", compose_file_path, "build"];
+    if check_file(&compose_file_path) {
         execute_command(command, args.to_vec());
     }
 }
 
-pub fn start_compose(compose_file_path: String, project: String) {
+pub fn start_compose(compose_file_path: &str, project: &str) {
     let command = "docker";
     let args = [
         "compose",
         "-f",
-        compose_file_path.as_str(),
+        compose_file_path,
         "-p",
-        project.as_str(),
+        project,
         "up",
         "-d",
     ];
-    if check_file(compose_file_path.clone()) {
+    if check_file(&compose_file_path) {
         execute_command(command, args.to_vec());
     }
 }
-pub fn stop_compose(compose_file_path: String, project: String) {
+pub fn stop_compose(compose_file_path: &str, project: &str) {
     let command = "docker";
-    let args = [
-        "compose",
-        "-f",
-        compose_file_path.as_str(),
-        "-p",
-        project.as_str(),
-        "down",
-    ];
-    if check_file(compose_file_path.clone()) {
+    let args = ["compose", "-f", compose_file_path, "-p", project, "down"];
+    if check_file(&compose_file_path) {
         execute_command(command, args.to_vec());
     }
 }
-pub fn restart_compose(compose_file_path: String, project: String) {
-    stop_compose(compose_file_path.clone(), project.clone());
-    start_compose(compose_file_path.clone(), project.clone());
+pub fn restart_compose(compose_file_path: &str, project: &str) {
+    stop_compose(&compose_file_path, &project);
+    start_compose(&compose_file_path, &project);
 }

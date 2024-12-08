@@ -73,7 +73,7 @@ fn main() {
     dotenv().ok();
     let git_username = std::env::var("GIT_USERNAME").expect("GIT_USERNAME must be set.");
     let git_password: String = std::env::var("GIT_PASSWORD").expect("GIT_PASSWORD must be set.");
-    if !check_file(init().configuration_file) {
+    if !check_file(&init().configuration_file) {
         eprintln!("Could not read project configuration file");
         exit(1);
     }
@@ -93,10 +93,11 @@ fn main() {
     ];
     let operation_choice: Result<&str, InquireError> =
         Select::new("What would you like to do?", operations).prompt();
-    let project_iterator: Iter<Application> = config.application.iter();
-    let projects = project_iterator
-        .clone()
-        .map(|service| service.name.as_str())
+    let mut project_iterator: Iter<Application> = config.application.iter();
+    let projects = config
+        .application
+        .iter()
+        .map(|service| &service.name)
         .collect();
     match operation_choice {
         Ok(choice) => {
@@ -106,13 +107,12 @@ fn main() {
                     "Deploy Application" => {
                         // First Check if the repo exists?
                         let service: Option<&Application> =
-                            project_iterator.clone().find(|&s| s.name == project);
+                            project_iterator.find(|&s| s.name == *project);
                         // dbg!(service.unwrap());
                         let repository_path =
                             config.repository_path.to_owned() + "/" + &service.unwrap().slug;
-                        let repo_url = service.unwrap().repository_url.as_str();
-                        let repo_exists =
-                            check_repository(Path::new(repository_path.clone().as_str()));
+                        let repo_url = &service.unwrap().repository_url;
+                        let repo_exists = check_repository(Path::new(&repository_path));
                         if !repo_exists {
                             prompt_clone_repository(
                                 &git_username,
@@ -135,28 +135,28 @@ fn main() {
                             exit(1)
                         };
                         let compose_path = generate_compose(
-                            config.repository_path,
-                            "./compose_files".to_string(),
-                            service.unwrap().clone().slug,
-                            service.unwrap().to_owned().container.clone(),
+                            &config.repository_path,
+                            "./compose_files",
+                            &service.unwrap().slug,
+                            &service.unwrap().container,
                         );
-                        build_compose(compose_path.clone());
-                        start_compose(compose_path.clone(), service.unwrap().clone().slug);
+                        build_compose(&compose_path);
+                        start_compose(&compose_path, &service.unwrap().slug);
                     }
                     "Restart Application" => {
                         let service: Option<&Application> =
-                            project_iterator.clone().find(|&s| s.name == project);
+                            project_iterator.find(|&s| s.name == *project);
                         restart_compose(
-                            format!("./compose_files/{}.yaml", service.unwrap().clone().slug),
-                            service.unwrap().clone().slug,
+                            format!("./compose_files/{}.yaml", &service.unwrap().slug).as_str(),
+                            &service.unwrap().slug,
                         )
                     }
                     "Stop Application" => {
                         let service: Option<&Application> =
-                            project_iterator.clone().find(|&s| s.name == project);
+                            project_iterator.find(|&s| s.name == *project);
                         stop_compose(
-                            format!("./compose_files/{}.yaml", service.unwrap().clone().slug),
-                            service.unwrap().clone().slug,
+                            format!("./compose_files/{}.yaml", &service.unwrap().slug).as_str(),
+                            &service.unwrap().slug,
                         )
                     }
                     &_ => {
