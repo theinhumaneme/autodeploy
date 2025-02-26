@@ -1,7 +1,7 @@
 [package]
 name = "autodeploy"
 version = "1.2.2"
-edition = "2021"
+edition = "2024"
 authors = ["Kalyan Mudumby"]
 description = "Configurable custom wrapper over git for quick and hassle free deployments"
 repository = "https://github.com/theinhumaneme/autodeploy"
