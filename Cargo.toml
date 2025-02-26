@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["Kalyan Mudumby"]
 description = "Configurable custom wrapper over git for quick and hassle free deployments"
 repository = "https://github.com/theinhumaneme/autodeploy"
-rust-version = "1.80.0"
+rust-version = "1.85.0"
 readme = "README.md"
 
 [dependencies]
